@@ -46,4 +46,14 @@ userSchema.pre('save', async function (next) {
     }
 });
 
-module.exports = mongoose.model('UserMod', userSchema);
+// metodo para comparar contraseñas en login
+userSchema.methods.comparePassword = async function (canditePassword) {
+    return await bcrypt.compare(canditePassword, this.userPassword);
+};
+
+const UserModel = mongoose.model('users', userSchema);
+module.exports = UserModel;
+//el esquema es la forma de los datos a enviar
+//los esquemas al ser creados vendrian siendo los documentos dentro de una coleccion de la base de datos
+//el modelo vendria siendo la collecion a crear dentro de la base de datos
+//la base de datos a llenar seria a la que estamos conectados en db
