@@ -23,7 +23,7 @@ const server = http.createServer(async (req, res) => {
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     // Para ver las peticiones
     console.log(`ejecutando ${req.method} en ${pathname}`)
-    console.log("el query es: ", query)
+    if (query.length > 3) console.log("el query es: ", query);
     // Rutas
     // #16f registro
     if (req.method === 'POST' && pathname === '/register') {
@@ -84,8 +84,8 @@ const server = http.createServer(async (req, res) => {
                 const token = jwt.sign({ userID: loginUser._id, email: loginUser.userEmail }, SECRET_KEY, {
                     expiresIn: "1h",
                 });
-                console.log("token enviado en login: ", token)
                 // Devolvemos el token en respuesta
+                console.log("se ha logueado una persona")
                 res.writeHead(201, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({ message: "Acceso permitido", serverInfo: token }));
             } catch (err) {
@@ -100,12 +100,11 @@ const server = http.createServer(async (req, res) => {
     // #16f pedir informacion en casa
     if (req.method === "GET" && pathname === "/home") {
         const token = req.headers.authorization?.split(" ")[1]; // Leer el token del encabezado Authorization
-        console.log("el token leido en home es: ", token)
 
         if (!token) {
             console.log("no hay token")
             res.writeHead(401, { "Content-Type": "application/json" });
-            return res.end(JSON.stringify({ message: "Token no proporcionado" }));
+            return res.end(JSON.stringify({ error: "Token no proporcionado" }));
         }
 
         try {
@@ -123,7 +122,7 @@ const server = http.createServer(async (req, res) => {
         } catch (err) {
             console.log("token expirado o invalido")
             res.writeHead(401, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ message: "Token inválido o expirado" }));
+            res.end(JSON.stringify({ error: "Token inválido o expirado" }));
         }
         // Para que no coja la respuesta generica de abajo
         return
@@ -132,14 +131,13 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && pathname === '/home') {
         // Verificacion de token
         const token = req.headers.authorization?.split(" ")[1]; // Leer el token del encabezado Authorization
-        console.log("el token es: ", token)
         // Almacenar variable del token
         let decoded;
         // Verificamos si hay token
         if (!token) {
             console.log("no hay token")
             res.writeHead(401, { "Content-Type": "application/json" });
-            return res.end(JSON.stringify({ message: "Token no proporcionado" }));
+            return res.end(JSON.stringify({ error: "Token no proporcionado" }));
         }
         // Decodificamos el token
         try {
@@ -147,9 +145,9 @@ const server = http.createServer(async (req, res) => {
             console.log("Decoded JWT:", decoded);
             console.log("token verificado en home");
         } catch (err) {
-            console.log("token invalido o caducado")
+            console.log("token invalido o caducado en home")
             res.writeHead(401, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ message: "Token inválido o expirado" }));
+            res.end(JSON.stringify({ error: "Token inválido o expirado" }));
             return
         }
         //En caso de que el token este bien, se procede con lo demas
@@ -214,6 +212,25 @@ const server = http.createServer(async (req, res) => {
         return
     }
     if (req.method === 'DELETE' && pathname === '/home') {
+        // Verificacion de token
+        const token = req.headers.authorization?.split(" ")[1];
+        let decoded;
+        if (!token) {
+            console.log("no hay token")
+            res.writeHead(401, { "Content-Type": "application/json" });
+            return res.end(JSON.stringify({ error: "Token no proporcionado" }));
+        }
+        try {
+            decoded = jwt.verify(token, SECRET_KEY);
+            console.log("Decoded JWT:", decoded);
+            console.log("token verificado en home");
+        } catch (err) {
+            console.log("token invalido o caducado en home")
+            res.writeHead(401, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Token inválido o expirado" }));
+            return
+        }
+        // verificacion query
         const { deleteID } = query;
         console.log("La petición es para ELIMINAR una nota");
         try {
