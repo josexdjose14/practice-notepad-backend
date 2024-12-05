@@ -19,7 +19,6 @@ const userSchema = new Schema({
     },
     userToken: {
         type: String,
-        default: null
     },
     isAccountActivated: {
         type: Boolean,
